@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
   spec.email         = ['contact@cyril.email']
 
   spec.summary       = 'Seal device with SHA-256 hash function.'
-  spec.description   = 'Seal device with SHA-256 hash function for Ruby.'
+  spec.description   = 'Seal device with SHA-256 hash function, for Ruby.'
   spec.homepage      = 'https://github.com/cyril/sha256_seal.rb'
   spec.license       = 'MIT'
 
