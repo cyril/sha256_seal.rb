@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'sha256_seal'
+
+require 'irb'
+IRB.start(__FILE__)
