@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sha256_seal (0.1.1)
+    sha256_seal (0.1.2)
 
 GEM
   remote: https://rubygems.org/
@@ -40,7 +40,7 @@ GEM
       defi (~> 1.1.1)
       matchi (~> 1.0.2)
     unicode-display_width (1.3.0)
-    yard (0.9.9)
+    yard (0.9.12)
 
 PLATFORMS
   ruby

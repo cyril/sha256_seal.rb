@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'digest/sha2'
 
 module Sha256Seal
@@ -12,7 +14,7 @@ module Sha256Seal
       i = @value.scan(@field).length
 
       unless i.equal?(1)
-        raise ArgumentError, "#{i} occurrences of #{@field.inspect} instead of 1"
+        raise ArgumentError, "#{i} #{@field.inspect} occurrences instead of 1."
       end
     end
 
