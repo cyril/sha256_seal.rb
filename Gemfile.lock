@@ -1,12 +1,12 @@
 PATH
   remote: .
   specs:
-    sha256_seal (0.1.0)
+    sha256_seal (0.1.1)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    ast (2.3.0)
+    ast (2.4.0)
     aw (0.1.1)
     defi (1.1.3)
     docile (1.1.5)
@@ -16,18 +16,17 @@ GEM
       spectus (~> 3.0.6)
     json (2.1.0)
     matchi (1.0.2)
-    parallel (1.12.0)
-    parser (2.4.0.0)
-      ast (~> 2.2)
+    parallel (1.12.1)
+    parser (2.4.0.2)
+      ast (~> 2.3)
     powerpack (0.1.1)
-    rainbow (2.2.2)
-      rake
-    rake (12.1.0)
-    rubocop (0.50.0)
+    rainbow (3.0.0)
+    rake (12.3.0)
+    rubocop (0.52.1)
       parallel (~> 1.10)
-      parser (>= 2.3.3.1, < 3.0)
+      parser (>= 2.4.0.2, < 3.0)
       powerpack (~> 0.1)
-      rainbow (>= 2.2.2, < 3.0)
+      rainbow (>= 2.2.2, < 4.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (~> 1.0, >= 1.0.1)
     ruby-progressbar (1.9.0)
@@ -47,13 +46,13 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bundler (~> 1.15)
+  bundler (~> 1.16)
   fix (~> 0.17)
-  rake (~> 12.1)
-  rubocop (~> 0.50)
+  rake (~> 12.3)
+  rubocop (~> 0.52)
   sha256_seal!
   simplecov (~> 0.15)
   yard (~> 0.9)
 
 BUNDLED WITH
-   1.16.0.pre.2
+   1.16.1
