@@ -44,4 +44,4 @@ builder.signed_value? # => true
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/cyril/sha256_seal.
+Bug reports and pull requests are welcome on GitHub at https://github.com/cyril/sha256_seal.rb.

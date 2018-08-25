@@ -1,0 +1,6 @@
+Metrics/LineLength:
+  Max: 176
+
+Metrics/BlockLength:
+  Exclude:
+    - 'fix/**/*'

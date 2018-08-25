@@ -2,7 +2,9 @@
 
 require 'digest/sha2'
 
+# Namespace for the Sha256Seal library.
 module Sha256Seal
+  # Main class for the Sha256Seal library.
   class Builder
     attr_reader :value, :secret, :field
 
@@ -13,9 +15,7 @@ module Sha256Seal
 
       i = @value.scan(@field).length
 
-      unless i.equal?(1)
-        raise ArgumentError, "#{i} #{@field.inspect} occurrences instead of 1."
-      end
+      raise ArgumentError, "#{i} #{@field.inspect} occurrences instead of 1." unless i.equal?(1)
     end
 
     def signed_value

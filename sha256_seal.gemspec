@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Gem::Specification.new do |spec|
   spec.name          = 'sha256_seal'
   spec.version       = File.read('VERSION.semver').chomp
@@ -13,9 +15,9 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_development_dependency 'bundler',    '~> 1.16'
-  spec.add_development_dependency 'rake',       '~> 12.3'
-  spec.add_development_dependency 'yard',       '~> 0.9'
-  spec.add_development_dependency 'simplecov',  '~> 0.15'
-  spec.add_development_dependency 'rubocop',    '~> 0.52'
   spec.add_development_dependency 'fix',        '~> 0.17'
+  spec.add_development_dependency 'rake',       '~> 12.3'
+  spec.add_development_dependency 'rubocop',    '~> 0.58'
+  spec.add_development_dependency 'simplecov',  '~> 0.16'
+  spec.add_development_dependency 'yard',       '~> 0.9'
 end
