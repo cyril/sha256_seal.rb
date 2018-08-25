@@ -11,6 +11,10 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/cyril/sha256_seal.rb'
   spec.license       = 'MIT'
 
+  spec.files         = `git ls-files -z`.split("\x0").reject do |f|
+    f.match(%r{^(fix)/})
+  end
+  spec.bindir        = 'exe'
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
