@@ -1,6 +1,1 @@
-Metrics/LineLength:
-  Max: 176
-
-Metrics/BlockLength:
-  Exclude:
-    - 'fix/**/*'
+inherit_from: .rubocop_todo.yml

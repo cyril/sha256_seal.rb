@@ -15,7 +15,9 @@ module Sha256Seal
 
       i = @value.scan(@field).length
 
-      raise ArgumentError, "#{i} #{@field.inspect} occurrences instead of 1." unless i.equal?(1)
+      return if i.equal?(1)
+
+      raise ::ArgumentError, "#{i} #{@field.inspect} occurrences instead of 1."
     end
 
     def signed_value
@@ -29,7 +31,7 @@ module Sha256Seal
     private
 
     def signature
-      Digest::SHA256.hexdigest(salt_value)
+      ::Digest::SHA256.hexdigest(salt_value)
     end
 
     def salt_value
