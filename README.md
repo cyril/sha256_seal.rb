@@ -112,7 +112,7 @@ end
 
 View:
 
-```ruby
+```erb
 # app/views/verified_requests/accounts/show.html.erb
 
 <%
