@@ -1,6 +1,14 @@
 # Sha256 Seal 🔏
 
-A tiny library to sign documents, and check their integrity.
+A small library allowing to sign documents, and to check their integrity.
+
+## Status
+
+[![Version](https://img.shields.io/github/v/tag/cyril/sha256_seal.rb?label=Version&logo=github)](https://github.com/cyril/sha256_seal.rb/tags)
+[![Yard documentation](https://img.shields.io/badge/Yard-documentation-blue.svg?logo=github)](https://rubydoc.info/github/cyril/sha256_seal.rb/main)
+[![Ruby](https://github.com/cyril/sha256_seal.rb/workflows/Ruby/badge.svg?branch=main)](https://github.com/cyril/sha256_seal.rb/actions?query=workflow%3Aruby+branch%3Amain)
+[![RuboCop](https://github.com/cyril/sha256_seal.rb/workflows/RuboCop/badge.svg?branch=main)](https://github.com/cyril/sha256_seal.rb/actions?query=workflow%3Arubocop+branch%3Amain)
+[![License](https://img.shields.io/github/license/cyril/sha256_seal.rb?label=License&logo=github)](https://github.com/cyril/sha256_seal.rb/raw/main/LICENSE.md)
 
 ## Installation
 
@@ -12,15 +20,19 @@ gem "sha256_seal"
 
 And then execute:
 
-    $ bundle
+```sh
+bundle install
+```
 
 Or install it yourself as:
 
-    $ gem install sha256_seal
+```sh
+gem install sha256_seal
+```
 
 ## Usage
 
-Sign values and verify signatures of values.
+Sign information and verify their signature.
 
 ## Example
 
@@ -75,35 +87,38 @@ Controller:
 ```ruby
 # app/controllers/verified_requests/base_controller.rb
 module VerifiedRequests
-  class BaseController < ApplicationController
-  # @see https://api.rubyonrails.org/classes/ActionController/RequestForgeryProtection.html#method-i-verified_request-3F
-    def verified_request?
-      secret          = ENV.fetch("CSRF_SECRET_KEY")
-      document_string = request.original_url.force_encoding("utf-8")
-      signature_field = request.path_parameters.fetch(:csrf)
-
-      builder = Sha256Seal::Builder.new(document_string, secret, signature_field)
-      builder.signed_value? || Rails.env.test?
-    end
-
+  class BaseController < ::ApplicationController
     def signed_url(route_method, **options)
       url_route_method  = "#{route_method}_url".to_sym
       incorrect_csrf    = "__CSRF_SECRET_KEY__"
       url_route_string  = public_send(url_route_method, csrf: incorrect_csrf, **options)
 
-      replace_incorrect_csrf_by_correct_csrf(url_route_string, incorrect_csrf: incorrect_csrf)
+      replace_incorrect_csrf_by_correct_csrf(url_route_string, incorrect_csrf:)
     end
     helper_method :signed_url
 
+    private
+
     def replace_incorrect_csrf_by_correct_csrf(value, incorrect_csrf:)
-      secret  = ENV.fetch("CSRF_SECRET_KEY")
+      secret  = ::ENV.fetch("CSRF_SECRET_KEY")
       field   = incorrect_csrf
-      builder = Sha256Seal::Builder.new(value, secret, field)
+      builder = ::Sha256Seal::Builder.new(value, secret, field)
       value   = builder.signed_value
       field   = builder.send(:signature)
-      builder = Sha256Seal::Builder.new(value, secret, field)
 
+      builder = ::Sha256Seal::Builder.new(value, secret, field)
       builder.signed_value
+    end
+
+    # @see https://api.rubyonrails.org/classes/ActionController/RequestForgeryProtection.html#method-i-verified_request-3F
+    # @see https://github.com/rails/rails/blob/8015c2c2cf5c8718449677570f372ceb01318a32/actionpack/lib/action_controller/metal/request_forgery_protection.rb#L333-L341
+    def verified_request?
+      secret          = ::ENV.fetch("CSRF_SECRET_KEY")
+      document_string = request.original_url.force_encoding("utf-8")
+      signature_field = request.path_parameters.fetch(:csrf)
+
+      builder = ::Sha256Seal::Builder.new(document_string, secret, signature_field)
+      builder.signed_value? || ::Rails.env.test?
     end
   end
 end
@@ -111,12 +126,11 @@ end
 
 View:
 
-```erb
+```ruby
 # app/views/verified_requests/accounts/show.html.erb
 
-<%
-  signed_url(:verified_request_account, id: 'bob', admin: true) # => "http://0.0.0.0:5000/.405d7c8f14389c9ae7f1d97ff66699093bf2d89d13b4f4280a35d62f9e616259/accounts/bob?admin=true"
-%>
+signed_url(:verified_request_account, id: "bob", admin: true)
+# => "http://0.0.0.0:5000/.405d7c8f14389c9ae7f1d97ff66699093bf2d89d13b4f4280a35d62f9e616259/accounts/bob?admin=true"
 ```
 
 ## Versioning
@@ -125,4 +139,4 @@ __Sha256Seal__ uses [Semantic Versioning 2.0.0](https://semver.org/)
 
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+The [gem](https://rubygems.org/gems/sha256_seal) is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
