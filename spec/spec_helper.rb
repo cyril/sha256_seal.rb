@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "simplecov"
+require 'simplecov'
 SimpleCov.start
 
-require "r_spec"
-require_relative File.join("..", "lib", "sha256_seal")
+require 'r_spec'
+require_relative File.join('..', 'lib', 'sha256_seal')
