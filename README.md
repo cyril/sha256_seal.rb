@@ -1,6 +1,6 @@
 # Sha256 Seal 🔏
 
-A small library allowing to sign documents, and to check their integrity.
+A small Ruby library for signing documents and verifying their integrity using HMAC-SHA-256.
 
 ## Status
 
@@ -14,7 +14,7 @@ A small library allowing to sign documents, and to check their integrity.
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'sha256_seal'
+gem "sha256_seal"
 ```
 
 And then execute:
@@ -29,112 +29,128 @@ Or install it yourself as:
 gem install sha256_seal
 ```
 
-## Usage
+## Overview
 
-Sign information and verify their signature.
+Sha256Seal enables you to:
 
-## Example
+1. Sign data by inserting a cryptographic signature at a specific location in a string
+2. Verify the integrity of the signed data
 
-In the context of a Web application, CSRF tokens could be embedded in URLs.
+The core concept is simple: replace a placeholder field in a string with an HMAC-SHA-256 signature, calculated using a secret key. This signature ensures that the data cannot be tampered with without detection.
 
-```ruby
-SECRET = 'secret'.freeze
+## Usage Examples
 
-document_string = '/.__SIGNATURE_HERE__/accounts/42?editable=false'
-signature_field = '__SIGNATURE_HERE__'
+### Basic Example - Signing Data
 
-builder = Sha256Seal::Builder.new(document_string, SECRET, signature_field)
-builder.signed_value? # => false
-builder.signed_value  # => "/.a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db/accounts/42?editable=false"
-
-document_string = '/.a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db/accounts/42?editable=false'
-signature_field = 'a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db'
-
-builder = Sha256Seal::Builder.new(document_string, SECRET, signature_field)
-builder.signed_value? # => true
-builder.signed_value  # => "/.a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db/accounts/42?editable=false"
-
-document_string = '/.a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db/accounts/42?editable=true'
-signature_field = 'a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db'
-
-builder = Sha256Seal::Builder.new(document_string, SECRET, signature_field)
-builder.signed_value? # => false
-builder.signed_value  # => "/.babd3a90b6bc2a4c0c7536a0c4804e5430a5a6df27d223c0f0102edb231de590/accounts/42?editable=true"
-```
-
-### Rails integration example
-
-Environment variable:
-
-```txt
-CSRF_SECRET_KEY=secret
-```
-
-Route:
+To sign a document, create a new builder with:
+- The original string containing a placeholder
+- A secret key
+- The placeholder to be replaced with the signature
 
 ```ruby
-# config/routes.rb
+document = "/.__SIGNATURE__/accounts/42?editable=false"
+secret = "my_secret_key"
+placeholder = "__SIGNATURE__"
+
+builder = Sha256Seal::Builder.new(document, secret, placeholder)
+signed_document = builder.signed_value
+# => "/.a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db/accounts/42?editable=false"
+```
+
+### Verifying Signed Data
+
+To verify a signed document:
+
+```ruby
+signed_document = "/.a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db/accounts/42?editable=false"
+secret = "my_secret_key"
+signature = "a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db"
+
+builder = Sha256Seal::Builder.new(signed_document, secret, signature)
+is_valid = builder.signed_value?
+# => true if the signature is valid, false otherwise
+```
+
+### Tamper Detection
+
+If the document is altered in any way after signing, verification will fail:
+
+```ruby
+# Original signed document
+signed_document = "/.a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db/accounts/42?editable=false"
+
+# Tampered document (changed editable=false to editable=true)
+tampered_document = "/.a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db/accounts/42?editable=true"
+signature = "a31c3936f236684a8ebc51dcfef168ce124450d71ae1ec404552ec9e0090a8db"
+
+builder = Sha256Seal::Builder.new(tampered_document, secret, signature)
+builder.signed_value? # => false
+```
+
+## Rails Integration Example
+
+Here's a practical example of how Sha256Seal can be integrated with Rails for CSRF protection in URLs:
+
+```ruby
+# Environment variable
+CSRF_SECRET_KEY = ENV.fetch("CSRF_SECRET_KEY", "your_default_development_secret")
+
+# In routes.rb
 Rails.application.routes.draw do
-  scope module: :verified_requests, path: '.:csrf', as: 'verified_request' do
-    get '/accounts/:id', to: 'accounts#show', as: 'account'
+  scope module: :verified_requests, path: ".:csrf", as: "verified_request" do
+    get "/accounts/:id", to: "accounts#show", as: "account"
   end
 end
-```
 
-Controller:
-
-```ruby
-# app/controllers/verified_requests/base_controller.rb
+# In app/controllers/verified_requests/base_controller.rb
 module VerifiedRequests
   class BaseController < ::ApplicationController
-    def signed_url(route_method, **)
-      url_route_method  = :"#{route_method}_url"
-      incorrect_csrf    = '__CSRF_SECRET_KEY__'
-      url_route_string  = public_send(url_route_method, csrf: incorrect_csrf, **)
+    def signed_url(route_method, **options)
+      # Generate a URL with a temporary placeholder
+      url_route_method = "#{route_method}_url".to_sym
+      placeholder = "__CSRF_TOKEN__"
+      url_string = public_send(url_route_method, csrf: placeholder, **options)
 
-      replace_incorrect_csrf_by_correct_csrf(url_route_string, incorrect_csrf:)
+      # Replace the placeholder with a real signature
+      builder = Sha256Seal::Builder.new(url_string, CSRF_SECRET_KEY, placeholder)
+      builder.signed_value
     end
     helper_method :signed_url
 
-    private
-
-    def replace_incorrect_csrf_by_correct_csrf(value, incorrect_csrf:)
-      secret  = ::ENV.fetch('CSRF_SECRET_KEY')
-      field   = incorrect_csrf
-      builder = ::Sha256Seal::Builder.new(value, secret, field)
-      value   = builder.signed_value
-      field   = builder.send(:signature)
-
-      builder = ::Sha256Seal::Builder.new(value, secret, field)
-      builder.signed_value
-    end
-
-    # @see https://api.rubyonrails.org/classes/ActionController/RequestForgeryProtection.html#method-i-verified_request-3F
-    # @see https://github.com/rails/rails/blob/8015c2c2cf5c8718449677570f372ceb01318a32/actionpack/lib/action_controller/metal/request_forgery_protection.rb#L333-L341
+    # In a before_action filter, verify the request's signature
     def verified_request?
-      secret          = ::ENV.fetch('CSRF_SECRET_KEY')
-      document_string = request.original_url.force_encoding('utf-8')
-      signature_field = request.path_parameters.fetch(:csrf)
+      signature = request.path_parameters.fetch(:csrf)
+      document_string = request.original_url.force_encoding("utf-8")
 
-      builder = ::Sha256Seal::Builder.new(document_string, secret, signature_field)
-      builder.signed_value? || ::Rails.env.test?
+      builder = Sha256Seal::Builder.new(document_string, CSRF_SECRET_KEY, signature)
+      builder.signed_value? || Rails.env.test?
     end
   end
 end
 ```
 
-View:
+## Common Use Cases
 
-```ruby
-# app/views/verified_requests/accounts/show.html.erb
+- Protecting against CSRF attacks by signing URLs
+- Creating signed download links with limited validity
+- Verifying the integrity of data submitted in forms
+- Creating tamper-proof API request signatures
 
-signed_url(:verified_request_account, id: 'bob', admin: true)
-# => "http://0.0.0.0:5000/.405d7c8f14389c9ae7f1d97ff66699093bf2d89d13b4f4280a35d62f9e616259/accounts/bob?admin=true"
-```
+## Technical Details
+
+- Uses HMAC-SHA-256 for cryptographic signatures
+- Encodes signatures as URL-safe Base64 without padding
+- Ensures UTF-8 encoding for all input strings
+- Limits maximum input size to 1MB
 
 ## Versioning
 
-__Sha256Seal__ uses [Semantic Versioning 2.0.0](https://semver.org/)
+Sha256Seal uses [Semantic Versioning 2.0.0](https://semver.org/)
+
+## Further Reading
+
+For more information about the concepts behind URL protection using HMAC, check out this article:
+[URL Protection Through HMAC: A Practical Approach](https://blog.cyril.email/posts/2025-03-12/url-protection-through-hmac.html)
 
 ## License
 

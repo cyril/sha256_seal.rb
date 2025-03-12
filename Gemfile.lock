@@ -1,15 +1,19 @@
 PATH
   remote: .
   specs:
-    sha256_seal (0.1.7)
+    sha256_seal (0.2.0)
+      base64 (~> 0.2)
+      openssl (~> 3.3)
 
 GEM
   remote: https://rubygems.org/
   specs:
+    base64 (0.2.0)
     defi (3.0.1)
     docile (1.4.1)
     expresenter (1.5.1)
     matchi (4.0.0)
+    openssl (3.3.0)
     r_spec (1.0.7)
       r_spec-clone
     r_spec-clone (1.7.2)

@@ -1,4 +1,4 @@
-# frozen_string_literal: true
+# frozen_string_literal: false
 
 require_relative "../spec_helper"
 
@@ -22,13 +22,13 @@ RSpec.describe Sha256Seal::Builder do
           "__SIGNATURE_HERE__"
         end
 
-        it { expect(subject.signed_value).to eq "/~bob/.8aa1d38b5c16d077d5ac1360c8a6f0248419ff5a3e6dca28a3233894ddcdf3c4/documents/" }
+        it { expect(subject.signed_value).to eq "/~bob/.vWTJTrUClmSCXslUPW9dk2X5fujpbbqPG5AChKRpiGQ/documents/" }
         it { expect(subject.signed_value?).to be false }
       end
 
-      context "when the field do not correspond to any entry" do
+      context "when the field does not correspond to any entry" do
         let(:field) do
-          "8aa1d38b5c16d077d5ac1360c8a6f0248419ff5a3e6dca28a3233894ddcdf3c4"
+          "vWTJTrUClmSCXslUPW9dk2X5fujpbbqPG5AChKRpiGQ"
         end
 
         it { expect { subject.signed_value }.to raise_exception ::ArgumentError }
@@ -38,15 +38,15 @@ RSpec.describe Sha256Seal::Builder do
 
     context "when value is signed" do
       let(:value) do
-        "/~bob/.8aa1d38b5c16d077d5ac1360c8a6f0248419ff5a3e6dca28a3233894ddcdf3c4/documents/"
+        "/~bob/.vWTJTrUClmSCXslUPW9dk2X5fujpbbqPG5AChKRpiGQ/documents/"
       end
 
       context "when the field corresponds to an entry" do
         let(:field) do
-          "8aa1d38b5c16d077d5ac1360c8a6f0248419ff5a3e6dca28a3233894ddcdf3c4"
+          "vWTJTrUClmSCXslUPW9dk2X5fujpbbqPG5AChKRpiGQ"
         end
 
-        it { expect(subject.signed_value).to eq "/~bob/.8aa1d38b5c16d077d5ac1360c8a6f0248419ff5a3e6dca28a3233894ddcdf3c4/documents/" }
+        it { expect(subject.signed_value).to eq "/~bob/.vWTJTrUClmSCXslUPW9dk2X5fujpbbqPG5AChKRpiGQ/documents/" }
         it { expect(subject.signed_value?).to be true }
       end
     end
@@ -66,7 +66,6 @@ RSpec.describe Sha256Seal::Builder do
       end
     end
 
-    # Additional tests for edge cases
     context "when handling different input types" do
       let(:value) do
         123
@@ -77,7 +76,7 @@ RSpec.describe Sha256Seal::Builder do
       end
 
       it "converts numeric value to string" do
-        expect(subject.signed_value).to eq "2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b"
+        expect(subject.signed_value).to eq "-eZuF5tnR65UEI-C-K3os8Jddv0wr95sOVgixTAZYWk"
         expect(subject.signed_value?).to be false
       end
     end
@@ -127,7 +126,7 @@ RSpec.describe Sha256Seal::Builder do
       signed_url = builder.signed_value
 
       # Extract the generated signature
-      signature = signed_url.match(/csrf=([a-f0-9]+)/)[1]
+      signature = signed_url.match(/csrf=([a-zA-Z0-9_-]+)/)[1]
 
       # Step 3: Verify the signed URL
       verifier = described_class.new(signed_url, secret, signature)
@@ -141,6 +140,52 @@ RSpec.describe Sha256Seal::Builder do
 
       # The tampered URL should be invalid
       expect(tampered_verifier.signed_value?).to be false
+    end
+  end
+
+  # Add new tests for UTF-8 encoding handling
+  context "when handling UTF-8 characters" do
+    let(:secret) { "secret_key" }
+
+    it "properly handles UTF-8 characters in values" do
+      # Unicode test with emojis and accented characters
+      value = "/users/🔑/résumé/.__SIGNATURE__/"
+      field = "__SIGNATURE__"
+
+      builder = described_class.new(value, secret, field)
+      signed_value = builder.signed_value
+
+      # Extract the signature
+      signature = signed_value.match(/\/users\/🔑\/résumé\/\.([a-zA-Z0-9_-]+)\//)[1]
+
+      # Verify the signature
+      verifier = described_class.new(signed_value, secret, signature)
+      expect(verifier.signed_value?).to be true
+    end
+
+    it "rejects invalid UTF-8 sequences" do
+      # Create an invalid UTF-8 sequence
+      invalid_utf8 = "/users/\xFF\xFE/.__SIGNATURE__/".force_encoding('UTF-8')
+      field = "__SIGNATURE__"
+
+      expect {
+        described_class.new(invalid_utf8, secret, field)
+      }.to raise_exception(ArgumentError)
+    end
+  end
+
+  # Test maximum size limits
+  context "when handling large inputs" do
+    let(:secret) { "secret_key" }
+    let(:field) { "__SIGNATURE__" }
+
+    it "rejects values exceeding the maximum size" do
+      # Create a string just over the MAX_VALUE_SIZE limit
+      large_value = "/path/__SIGNATURE__/" + "x" * (Sha256Seal::Builder::MAX_VALUE_SIZE)
+
+      expect {
+        described_class.new(large_value, secret, field)
+      }.to raise_exception(ArgumentError)
     end
   end
 end

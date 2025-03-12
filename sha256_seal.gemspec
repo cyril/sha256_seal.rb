@@ -13,5 +13,8 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 3.4.2'
 
+  s.add_runtime_dependency 'openssl', '~> 3.3'
+  s.add_runtime_dependency 'base64', '~> 0.2'
+
   s.metadata['rubygems_mfa_required'] = 'true'
 end
